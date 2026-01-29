@@ -236,17 +236,22 @@ def dashboard():
         return redirect(url_for("login"))
 
     owner_id = session["owner_id"]
+
+    qr_path = f"qr_codes/owner_{owner_id}_qr.png"
+
     token_row = get_token_for_owner(owner_id)
 
-    if not token_row:
+    # If token exists but QR file is missing → regenerate
+    if token_row and not os.path.exists(qr_path):
+        # we must regenerate token + QR
         token = secrets.token_urlsafe(16)
         token_hash = generate_password_hash(token)
 
         conn = sqlite3.connect("doorbell.db")
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO doorbell (owner_id, token_hash) VALUES (?, ?)",
-            (owner_id, token_hash)
+            "UPDATE doorbell SET token_hash=? WHERE owner_id=?",
+            (token_hash, owner_id)
         )
         conn.commit()
         conn.close()
@@ -257,6 +262,7 @@ def dashboard():
 
     qr_file = f"/static/owner_{owner_id}_qr.png"
     return render_template("dashboard.html", qr_file=qr_file)
+
 
 
 
@@ -302,7 +308,6 @@ def ring(token):
     return render_template("ring.html", message=message)
 
 
-
 @app.route("/download-qr")
 def download_qr():
     if not session.get("owner_logged_in"):
@@ -311,7 +316,12 @@ def download_qr():
     owner_id = session["owner_id"]
     path = f"qr_codes/owner_{owner_id}_qr.png"
 
+    # If missing, regenerate via dashboard logic
+    if not os.path.exists(path):
+        return redirect(url_for("dashboard"))
+
     return send_file(path, as_attachment=True)
+
 
 @app.route("/history")
 def history():
