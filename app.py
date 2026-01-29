@@ -75,7 +75,7 @@ def create_doorbell_for_owner(owner_id):
 
 
 def generate_qr_for_owner(owner_id, token):
-    base_url = os.environ.get("BASE_URL", "https://virtualdoorbell-production.up.railway.app")
+    base_url = os.environ.get("BASE_URL", "https://virtual-doorbell-production.up.railway.app")
 
     ring_url = f"{base_url}/ring/{token}"
     print("🧪 BASE_URL USED:", base_url)
