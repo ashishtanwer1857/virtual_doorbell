@@ -74,19 +74,48 @@ def create_doorbell_for_owner(owner_id):
     return None
 
 
-def generate_qr_for_owner(owner_id, token):
-    base_url = os.environ.get("BASE_URL", "https://virtual-doorbell-production.up.railway.app")
 
+
+def generate_qr_for_owner(owner_id, token):
+    base_url = os.environ.get("BASE_URL", "").rstrip("/")
     ring_url = f"{base_url}/ring/{token}"
-    print("🧪 BASE_URL USED:", base_url)
+
     print("🧪 FULL QR URL:", ring_url)
+
     qr = qrcode.make(ring_url)
 
-    qr_path = f"qr_codes/owner_{owner_id}_qr.png"
-    qr.save(qr_path)
+    ts = int(time.time())
+    qr_path = f"qr_codes/owner_{owner_id}_{ts}.png"
+    static_path = f"static/owner_{owner_id}_{ts}.png"
 
-    static_path = f"static/owner_{owner_id}_qr.png"
+    qr.save(qr_path)
     shutil.copy(qr_path, static_path)
+
+    return static_path
+
+
+
+def regenerate_qr_for_owner(owner_id):
+    token = secrets.token_urlsafe(16)
+    token_hash = generate_password_hash(token)
+
+    conn = sqlite3.connect("doorbell.db")
+    cursor = conn.cursor()
+
+    # Remove old token
+    cursor.execute("DELETE FROM doorbell WHERE owner_id=?", (owner_id,))
+
+    # Insert new token
+    cursor.execute(
+        "INSERT INTO doorbell (owner_id, token_hash) VALUES (?, ?)",
+        (owner_id, token_hash)
+    )
+
+    conn.commit()
+    conn.close()
+
+    # Generate new QR
+    return generate_qr_for_owner(owner_id, token)
 
 def expose_qr_for_display(owner_id):
     src =  f"qr_codes/owner_{owner_id}_qr.png"
@@ -238,31 +267,15 @@ def dashboard():
 
     owner_id = session["owner_id"]
 
-    qr_path = f"qr_codes/owner_{owner_id}_qr.png"
-
     token_row = get_token_for_owner(owner_id)
+    if not token_row:
+        regenerate_qr_for_owner(owner_id)
 
-    # If token exists but QR file is missing → regenerate
-    if token_row and not os.path.exists(qr_path):
-        # we must regenerate token + QR
-        token = secrets.token_urlsafe(16)
-        token_hash = generate_password_hash(token)
+    static_qr_path = generate_qr_for_owner(owner_id, secrets.token_urlsafe(16))
+    session["qr_path"] = "/" + static_qr_path
 
-        conn = sqlite3.connect("doorbell.db")
-        cursor = conn.cursor()
-        cursor.execute(
-            "UPDATE doorbell SET token_hash=? WHERE owner_id=?",
-            (token_hash, owner_id)
-        )
-        conn.commit()
-        conn.close()
+    return render_template("dashboard.html", qr_file=session["qr_path"])
 
-        generate_qr_for_owner(owner_id, token)
-
-    expose_qr_for_display(owner_id)
-
-    qr_file = f"/static/owner_{owner_id}_qr.png"
-    return render_template("dashboard.html", qr_file=qr_file)
 
 
 
