@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="text-center">
+    <h2>🔔 Ring Doorbell</h2>
+
+    {% if message %}
+        <div class="alert alert-info mt-3">{{ message }}</div>
+    {% endif %}
+
+    <form method="POST" class="mt-4">
+        <button class="btn btn-danger btn-lg">Ring Bell</button>
+    </form>
+</div>
+
+{% endblock %}

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+<h2 class="mb-4 text-center">📜 Ring History</h2>
+
+{% if rings|length == 0 %}
+    <div class="alert alert-info text-center">
+        No one has rung the bell yet.
+    </div>
+{% else %}
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped align-middle">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Visitor Email</th>
+                    <th>Visitor IP</th>
+                    <th>Ring Time</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ring in rings %}
+                <tr>
+                    <td>{{ loop.index }}</td>
+                    <td>{{ ring[2] }}</td>
+                    <td>{{ ring[3] }}</td>
+                    <td>{{ ring[4] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+<div class="text-center mt-4">
+    <a href="/dashboard" class="btn btn-outline-dark">⬅ Back to Dashboard</a>
+</div>
+
+{% endblock %}

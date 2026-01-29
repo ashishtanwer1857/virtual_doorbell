@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="text-center">
+    <h2 class="mb-4">📟 Your Doorbell QR</h2>
+
+    <img src="{{ qr_file }}" class="img-fluid mb-3" style="max-width:300px;">
+
+    <div>
+        <a href="/download-qr" class="btn btn-success">⬇ Download QR</a>
+        <a href="/history" class="btn btn-outline-dark ms-2">📜 Ring History</a>
+    </div>
+</div>
+
+{% endblock %}

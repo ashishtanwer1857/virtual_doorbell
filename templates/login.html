@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row justify-content-center">
+    <div class="col-md-5">
+        <div class="card shadow">
+            <div class="card-body">
+                <h3 class="text-center mb-4">Owner Login</h3>
+
+                <form method="POST">
+                    <input class="form-control mb-3" type="email" name="email" placeholder="Email" required>
+                    <input class="form-control mb-3" type="password" name="password" placeholder="Password" required>
+
+                    <button class="btn btn-dark w-100">Login</button>
+                </form>
+
+                {% if error %}
+                    <p class="text-danger mt-3 text-center">{{ error }}</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
