@@ -95,27 +95,7 @@ def generate_qr_for_owner(owner_id, token):
 
 
 
-def regenerate_qr_for_owner(owner_id):
-    token = secrets.token_urlsafe(16)
-    token_hash = generate_password_hash(token)
 
-    conn = sqlite3.connect("doorbell.db")
-    cursor = conn.cursor()
-
-    # Remove old token
-    cursor.execute("DELETE FROM doorbell WHERE owner_id=?", (owner_id,))
-
-    # Insert new token
-    cursor.execute(
-        "INSERT INTO doorbell (owner_id, token_hash) VALUES (?, ?)",
-        (owner_id, token_hash)
-    )
-
-    conn.commit()
-    conn.close()
-
-    # Generate new QR
-    return generate_qr_for_owner(owner_id, token)
 
 def expose_qr_for_display(owner_id):
     src =  f"qr_codes/owner_{owner_id}_qr.png"
@@ -268,9 +248,6 @@ def dashboard():
     owner_id = session["owner_id"]
 
     token_row = get_token_for_owner(owner_id)
-    if not token_row:
-        regenerate_qr_for_owner(owner_id)
-
     static_qr_path = generate_qr_for_owner(owner_id, secrets.token_urlsafe(16))
     session["qr_path"] = "/" + static_qr_path
 
