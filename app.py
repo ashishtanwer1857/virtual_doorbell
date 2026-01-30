@@ -259,7 +259,17 @@ def dashboard():
 
 @app.route("/ring/<token>", methods=["GET", "POST"])
 def ring(token):
+    conn = sqlite3.connect("doorbell.db")
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM doorbell")
+    count = cursor.fetchone()[0]
+    conn.close()
+
+    print("📦 Doorbell rows in DB:", count)
+
     owner_id = get_owner_by_token(token)
+    print("🔑 Token received:", token)
+    print("👤 Owner resolved:", owner_id)
 
     if not owner_id:
         return "❌ Invalid QR"
