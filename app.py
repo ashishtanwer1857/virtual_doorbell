@@ -1,13 +1,18 @@
 from flask import Flask,render_template,request,flash,send_file,session,url_for,redirect
 import sqlite3,time
 import os,shutil
-import qrcode
+import qrcode,hashlib
 import secrets
 from werkzeug.security import generate_password_hash,check_password_hash
 app= Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
 ring_cooldown=30
+
+
+def hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode()).hexdigest()
+
 def init_db():
     conn = sqlite3.connect("doorbell.db")
     cursor = conn.cursor()
@@ -57,7 +62,7 @@ def create_doorbell_for_owner(owner_id):
 
     if not exists:
         token = secrets.token_urlsafe(16)
-        token_hash = generate_password_hash(token)
+        token_hash = hash_token(token)
 
         cursor.execute(
             "INSERT INTO doorbell (owner_id, token_hash) VALUES (?, ?)",
@@ -155,7 +160,7 @@ def get_owner_by_token(token):
     conn.close()
 
     for owner_id, token_hash in rows:
-        if check_password_hash(token_hash, token):
+        if hash_token(token)==token_hash:
             return owner_id
 
     return None
