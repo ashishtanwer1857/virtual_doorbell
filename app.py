@@ -159,11 +159,14 @@ def get_owner_by_token(token):
     rows = cursor.fetchall()
     conn.close()
 
+    token_hashed = hash_token(token)
+
     for owner_id, token_hash in rows:
-        if hash_token(token)==token_hash:
+        if token_hashed == token_hash:
             return owner_id
 
     return None
+
 def is_owner_email(email):
     conn = sqlite3.connect("doorbell.db")
     cursor = conn.cursor()
