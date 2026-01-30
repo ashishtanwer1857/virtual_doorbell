@@ -85,8 +85,8 @@ def generate_qr_for_owner(owner_id, token):
     qr = qrcode.make(ring_url)
 
     ts = int(time.time())
-    qr_path = f"qr_codes/owner_{owner_id}_{ts}.png"
-    static_path = f"static/owner_{owner_id}_{ts}.png"
+    qr_path = f"qr_codes/owner_{owner_id}.png"
+    static_path = f"static/owner_{owner_id}.png"
 
     qr.save(qr_path)
     shutil.copy(qr_path, static_path)
