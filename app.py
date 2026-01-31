@@ -4,6 +4,13 @@ import os,shutil
 import qrcode,hashlib
 import secrets
 from werkzeug.security import generate_password_hash,check_password_hash
+
+
+print("🔍 ALL ENV KEYS SEEN BY APP:")
+for k in sorted(os.environ.keys()):
+    if "BASE" in k or "RAILWAY" in k:
+        print(f"   {k} = {os.environ.get(k)}")
+
 app= Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
@@ -73,6 +80,7 @@ def create_doorbell_for_owner(owner_id):
     return token
 
 
+print("🌍 ENV BASE_URL (direct check):", os.environ.get("BASE_URL"))
 
 
 def generate_qr_for_owner(owner_id, token):
