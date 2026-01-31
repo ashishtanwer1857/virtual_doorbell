@@ -2,7 +2,7 @@ from flask import Flask,render_template,request,flash,send_file,session,url_for,
 import sqlite3,time
 import os,shutil
 import qrcode,hashlib
-import secrets
+import secrets,threading
 import requests
 from werkzeug.security import generate_password_hash,check_password_hash
 from telegram import Update
@@ -482,10 +482,13 @@ def logout():
 if __name__ == "__main__":
     app.run()
 
-import threading
+telegram_started = False
 
-if __name__ == "__main__":
-    threading.Thread(target=start_telegram_bot).start()
-    app.run(host="0.0.0.0", port=8000)
+@app.before_first_request
+def launch_telegram_bot():
+    global telegram_started
+    if not telegram_started:
+        telegram_started = True
+        threading.Thread(target=start_telegram_bot, daemon=True).start()
 
 
