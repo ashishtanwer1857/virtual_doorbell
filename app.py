@@ -12,10 +12,16 @@ from telegram.ext import (
     CallbackContext
 )
 
+import threading
+
+telegram_started = False
+telegram_lock = threading.Lock()
 
 
 
 app= Flask(__name__)
+
+
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
 ring_cooldown=30
@@ -231,6 +237,7 @@ def start_telegram_bot():
 
     updater.start_polling()
     print("🤖 Telegram bot started")
+
 
 
 def send_telegram_message(chat_id, text):
@@ -482,13 +489,8 @@ def logout():
 if __name__ == "__main__":
     app.run()
 
-telegram_started = False
 
-@app.before_first_request
-def launch_telegram_bot():
-    global telegram_started
-    if not telegram_started:
-        telegram_started = True
-        threading.Thread(target=start_telegram_bot, daemon=True).start()
+
+
 
 
