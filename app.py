@@ -84,10 +84,15 @@ print("🌍 ENV BASE_URL (direct check):", os.environ.get("BASE_URL"))
 
 
 def generate_qr_for_owner(owner_id, token):
-    base_url = os.environ.get("BASE_URL","").rstrip("/")
+    domain = os.environ.get("RAILWAY_PUBLIC_DOMAIN")
+
+    if not domain:
+        raise RuntimeError("RAILWAY_PUBLIC_DOMAIN not available")
+
+    base_url = f"https://{domain}"
     ring_url = f"{base_url}/ring/{token}"
 
-    print("🧪 QR URL:", ring_url)
+    print("🧪 FULL QR URL:", ring_url)
 
     qr = qrcode.make(ring_url)
     path = f"static/owner_{owner_id}.png"
