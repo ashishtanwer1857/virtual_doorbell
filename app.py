@@ -51,52 +51,41 @@ def init_db():
 
 init_db()
 def create_doorbell_for_owner(owner_id):
+    token = secrets.token_urlsafe(16)
+    token_hash = hash_token(token)
+
     conn = sqlite3.connect("doorbell.db")
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT id FROM doorbell WHERE owner_id=?",
+        "DELETE FROM doorbell WHERE owner_id=?",
         (owner_id,)
     )
-    exists = cursor.fetchone()
+    cursor.execute(
+        "INSERT INTO doorbell (owner_id, token_hash)",
+        (owner_id, token_hash)
+    )
 
-    if not exists:
-        token = secrets.token_urlsafe(16)
-        token_hash = hash_token(token)
-
-        cursor.execute(
-            "INSERT INTO doorbell (owner_id, token_hash) VALUES (?, ?)",
-            (owner_id, token_hash)
-        )
-
-        conn.commit()
-        conn.close()
-
-        generate_qr_for_owner(owner_id, token)
-        return token
-
+    conn.commit()
     conn.close()
-    return None
+
+    print("🟢 TOKEN STORED:", token)
+    return token
 
 
 
 
 def generate_qr_for_owner(owner_id, token):
-    base_url = os.environ.get("BASE_URL", "https://virtualdoorbell-production.up.railway.app").rstrip("/")
+    base_url = os.environ["virtualdoorbell-production.up.railway.app"].rstrip("/")
     ring_url = f"{base_url}/ring/{token}"
 
-    print("🧪 FULL QR URL:", ring_url)
+    print("🧪 QR URL:", ring_url)
 
     qr = qrcode.make(ring_url)
+    path = f"static/owner_{owner_id}.png"
+    qr.save(path)
 
-    ts = int(time.time())
-    qr_path = f"qr_codes/owner_{owner_id}.png"
-    static_path = f"static/owner_{owner_id}.png"
-
-    qr.save(qr_path)
-    shutil.copy(qr_path, static_path)
-
-    return static_path
+    return f"/static/owner_{owner_id}.png"
 
 
 
