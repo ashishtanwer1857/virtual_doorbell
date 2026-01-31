@@ -62,7 +62,7 @@ def create_doorbell_for_owner(owner_id):
         (owner_id,)
     )
     cursor.execute(
-        "INSERT INTO doorbell (owner_id, token_hash)",
+        "INSERT INTO doorbell (owner_id, token_hash) VALUES(?,?)",
         (owner_id, token_hash)
     )
 
