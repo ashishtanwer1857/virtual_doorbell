@@ -76,7 +76,7 @@ def create_doorbell_for_owner(owner_id):
 
 
 def generate_qr_for_owner(owner_id, token):
-    base_url = os.environ["BASE_URL"].rstrip("/")
+    base_url = os.environ.get("BASE_URL","").rstrip("/")
     ring_url = f"{base_url}/ring/{token}"
 
     print("🧪 QR URL:", ring_url)
