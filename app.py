@@ -225,10 +225,20 @@ def login():
         conn.close()
 
         if user and check_password_hash(user[1], password):
-            session["owner_logged_in"] = True
-            session["owner_id"] = user[0]
+            owner_id = user[0]
 
-            create_doorbell_for_owner(user[0])
+            # session setup
+            session["owner_logged_in"] = True
+            session["owner_id"] = owner_id
+
+            # 🔥 TOKEN GENERATED ONCE
+            token = create_doorbell_for_owner(owner_id)
+
+            # 🔥 QR GENERATED ONCE WITH SAME TOKEN
+            qr_path = generate_qr_for_owner(owner_id, token)
+
+            # 🔥 STORED ONCE
+            session["qr_path"] = qr_path
 
             return redirect(url_for("dashboard"))
         else:
@@ -237,18 +247,14 @@ def login():
     return render_template("login.html", error=error)
 
 
+
+
 @app.route("/dashboard")
 def dashboard():
-    if not session.get("owner_logged_in"):
-        return redirect(url_for("login"))
-
-    owner_id = session["owner_id"]
-
-    token_row = get_token_for_owner(owner_id)
-    static_qr_path = generate_qr_for_owner(owner_id, secrets.token_urlsafe(16))
-    session["qr_path"] = "/" + static_qr_path
-
-    return render_template("dashboard.html", qr_file=session["qr_path"])
+    return render_template(
+        "dashboard.html",
+        qr_file=session.get("qr_path")
+    )
 
 
 
