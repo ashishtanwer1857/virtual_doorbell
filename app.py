@@ -3,13 +3,17 @@ import sqlite3,time
 import os,shutil
 import qrcode,hashlib
 import secrets
+import requests
 from werkzeug.security import generate_password_hash,check_password_hash
+from telegram import Update
+from telegram.ext import (
+    Updater,
+    CommandHandler,
+    CallbackContext
+)
 
 
-print("🔍 ALL ENV KEYS SEEN BY APP:")
-for k in sorted(os.environ.keys()):
-    if "BASE" in k or "RAILWAY" in k:
-        print(f"   {k} = {os.environ.get(k)}")
+
 
 app= Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
@@ -48,7 +52,8 @@ def init_db():
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
-        role TEXT NOT NULL
+        role TEXT NOT NULL,
+        tg_chat_id TEXT NOT NULL
     )
     """)
 
@@ -76,11 +81,9 @@ def create_doorbell_for_owner(owner_id):
     conn.commit()
     conn.close()
 
-    print("🟢 TOKEN STORED:", token)
+    
     return token
 
-
-print("🌍 ENV BASE_URL (direct check):", os.environ.get("BASE_URL"))
 
 
 def generate_qr_for_owner(owner_id, token):
@@ -92,7 +95,7 @@ def generate_qr_for_owner(owner_id, token):
     base_url = f"https://{domain}"
     ring_url = f"{base_url}/ring/{token}"
 
-    print("🧪 FULL QR URL:", ring_url)
+    
 
     qr = qrcode.make(ring_url)
     path = f"static/owner_{owner_id}.png"
@@ -182,6 +185,88 @@ def is_owner_email(email):
 
     return row is not None
 
+
+#Now telegram functions starts....
+
+def telegram_start(update: Update, context: CallbackContext):
+    message = update.message.text
+    chat_id = update.message.chat_id
+
+    parts = message.split()
+
+    if len(parts) != 2:
+        update.message.reply_text(
+            "❌ Invalid start link.\nPlease connect Telegram from dashboard."
+        )
+        return
+
+    owner_id = parts[1]
+
+    # Save chat_id in database
+    conn = sqlite3.connect("doorbell.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "UPDATE users SET telegram_chat_id=? WHERE id=?",
+        (chat_id, owner_id)
+    )
+
+    conn.commit()
+    conn.close()
+
+    update.message.reply_text(
+        "✅ Telegram connected successfully!\nYou will now receive doorbell notifications."
+    )
+def start_telegram_bot():
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+
+    if not token:
+        print("❌ TELEGRAM_BOT_TOKEN not set")
+        return
+
+    updater = Updater(token, use_context=True)
+    dp = updater.dispatcher
+
+    dp.add_handler(CommandHandler("start", telegram_start))
+
+    updater.start_polling()
+    print("🤖 Telegram bot started")
+
+
+def send_telegram_message(chat_id, text):
+    token = os.environ.get("TELEGRAM_BOT_TOKEN")
+
+    if not token:
+        print("❌ TELEGRAM_BOT_TOKEN missing")
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+
+    payload = {
+        "chat_id": chat_id,
+        "text": text,
+        "parse_mode": "HTML"
+    }
+
+    try:
+        requests.post(url, json=payload, timeout=5)
+    except Exception as e:
+        print("❌ Telegram send error:", e)
+
+def get_owner_telegram_chat_id(owner_id):
+    conn = sqlite3.connect("doorbell.db")
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT telegram_chat_id FROM users WHERE id=?",
+        (owner_id,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    return row[0] if row and row[0] else None
+
+
 @app.route("/")
 def homepage():
     return render_template("homepage.html")
@@ -264,11 +349,28 @@ def login():
 
 @app.route("/dashboard")
 def dashboard():
+    if not session.get("owner_logged_in"):
+        return redirect(url_for("login"))
+
+    owner_id = session["owner_id"]
+
+    conn = sqlite3.connect("doorbell.db")
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT tg_chat_id FROM users WHERE id=?",
+        (owner_id,)
+    )
+    row = cursor.fetchone()
+    conn.close()
+
+    telegram_connected = bool(row and row[0])
+
     return render_template(
         "dashboard.html",
-        qr_file=session.get("qr_path")
+        qr_file=session.get("qr_path"),
+        telegram_connected=telegram_connected,
+        owner_id=owner_id
     )
-
 
 
 
@@ -320,6 +422,18 @@ def ring(token):
             )
 
         save_ring_event(owner_id, visitor_email, visitor_ip)
+        chat_id = get_owner_telegram_chat_id(owner_id)
+
+        if chat_id:
+            message = f"""
+        🔔 <b>Doorbell Rang</b>
+
+        📧 Visitor: {visitor_email}
+        🌐 IP: {visitor_ip}
+        🕒 Time: just now
+        """
+            send_telegram_message(chat_id, message)
+
         message = "✅ Bell rang successfully!"
 
     return render_template("ring.html", message=message)
@@ -368,5 +482,10 @@ def logout():
 if __name__ == "__main__":
     app.run()
 
+import threading
+
+if __name__ == "__main__":
+    threading.Thread(target=start_telegram_bot).start()
+    app.run(host="0.0.0.0", port=8000)
 
 

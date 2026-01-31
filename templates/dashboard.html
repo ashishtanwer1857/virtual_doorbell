@@ -9,6 +9,22 @@
     <div>
         <a href="/download-qr" class="btn btn-success">⬇ Download QR</a>
         <a href="/history" class="btn btn-outline-dark ms-2">📜 Ring History</a>
+        <hr>
+
+{% if telegram_connected %}
+    <p style="color: green; font-weight: bold;">
+        ✅ Telegram Connected
+    </p>
+{% else %}
+    <a
+        href="https://t.me/virtual_doorbell_bot?start={{ owner_id }}"
+        target="_blank"
+        class="btn btn-primary"
+    >
+        🔗 Connect Telegram
+    </a>
+{% endif %}
+
     </div>
 </div>
 
