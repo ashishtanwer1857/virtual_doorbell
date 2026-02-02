@@ -75,12 +75,15 @@ def ensure_users_schema():
     cursor.execute("PRAGMA table_info(users)")
     columns = [col[1] for col in cursor.fetchall()]
 
+    print("🧱 USERS TABLE COLUMNS:", columns)
+
     if "tg_chat_id" not in columns:
         cursor.execute("ALTER TABLE users ADD COLUMN tg_chat_id TEXT")
         conn.commit()
         print("✅ tg_chat_id column added")
 
     conn.close()
+
 
 def create_doorbell_for_owner(owner_id):
     token = secrets.token_urlsafe(16)
