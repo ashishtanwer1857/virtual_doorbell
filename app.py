@@ -59,7 +59,7 @@ def init_db():
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL,
-
+        tg_chat_id TEXT
     )
     """)
 
