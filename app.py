@@ -212,7 +212,7 @@ def is_owner_email(email):
 
 #Now telegram functions starts....
 
-def telegram_start(update, context):
+###def telegram_start(update, context):
     text = update.message.text
     chat_id = update.message.chat_id
 
@@ -236,7 +236,7 @@ def telegram_start(update, context):
 
     update.message.reply_text("✅ Telegram connected successfully!")
 
-def start_telegram_bot():
+#def start_telegram_bot():
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
 
     if not token:
@@ -284,7 +284,7 @@ def get_owner_telegram_chat_id(owner_id):
     row = cursor.fetchone()
     conn.close()
 
-    return row[0] if row and row[0] else None
+    return row[0] if row and row[0] else None###
 
 
 @app.route("/")
