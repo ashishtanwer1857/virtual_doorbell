@@ -25,13 +25,14 @@ app= Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
 ring_cooldown=30
-
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.path.join(BASE_DIR, "DB_PATH")
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 def init_db():
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -69,7 +70,7 @@ def init_db():
 
 init_db()
 def ensure_users_schema():
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("PRAGMA table_info(users)")
@@ -89,7 +90,7 @@ def create_doorbell_for_owner(owner_id):
     token = secrets.token_urlsafe(16)
     token_hash = hash_token(token)
 
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -137,7 +138,7 @@ def expose_qr_for_display(owner_id):
     if os.path.exists(src):
         shutil.copy(src, dst)
 def save_ring_event(owner_id, email, ip):
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -153,7 +154,7 @@ def save_ring_event(owner_id, email, ip):
 
 
 def can_ring_again(email, ip):
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -167,7 +168,7 @@ def can_ring_again(email, ip):
 
     return count == 0
 def get_token_for_owner(owner_id):
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -180,7 +181,7 @@ def get_token_for_owner(owner_id):
     return row
 
 def get_owner_by_token(token):
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute("SELECT owner_id, token_hash FROM doorbell")
@@ -196,7 +197,7 @@ def get_owner_by_token(token):
     return None
 
 def is_owner_email(email):
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -226,7 +227,7 @@ def telegram_start(update: Update, context: CallbackContext):
     owner_id = parts[1]
 
     # Save chat_id in database
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -278,7 +279,7 @@ def send_telegram_message(chat_id, text):
         print("❌ Telegram send error:", e)
 
 def get_owner_telegram_chat_id(owner_id):
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
@@ -305,7 +306,7 @@ def signup():
         email = request.form["email"]
         password = request.form["password"]
 
-        conn = sqlite3.connect("doorbell.db")
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
         # check if owner already exists
@@ -336,7 +337,7 @@ def login():
         email = request.form["email"]
         password = request.form["password"]
 
-        conn = sqlite3.connect("doorbell.db")
+        conn = sqlite3.connect(DB_PATH)
         cursor = conn.cursor()
 
         cursor.execute(
@@ -378,7 +379,7 @@ def dashboard():
 
     owner_id = session["owner_id"]
 
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute(
         "SELECT tg_chat_id FROM users WHERE id=?",
@@ -401,7 +402,7 @@ def dashboard():
 
 @app.route("/ring/<token>", methods=["GET", "POST"])
 def ring(token):
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
     cursor.execute("SELECT COUNT(*) FROM doorbell")
     count = cursor.fetchone()[0]
@@ -485,7 +486,7 @@ def history():
 
     owner_id = session["owner_id"]
 
-    conn = sqlite3.connect("doorbell.db")
+    conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
     cursor.execute(
