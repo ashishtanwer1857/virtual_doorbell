@@ -26,7 +26,7 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 
 ring_cooldown=30
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_PATH = os.path.join(BASE_DIR, "DB_PATH")
+DB_PATH = os.path.join(BASE_DIR, "doorbell.db")
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
@@ -283,7 +283,7 @@ def get_owner_telegram_chat_id(owner_id):
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT telegram_chat_id FROM users WHERE id=?",
+        "SELECT tg_chat_id FROM users WHERE id=?",
         (owner_id,)
     )
     row = cursor.fetchone()
