@@ -448,6 +448,7 @@ def ring(token):
 
         save_ring_event(owner_id, visitor_email, visitor_ip)
         chat_id = get_owner_telegram_chat_id(owner_id)
+        print("📨 TELEGRAM CHAT ID:", chat_id)
 
         if chat_id:
             message = f"""
@@ -457,6 +458,7 @@ def ring(token):
         🌐 IP: {visitor_ip}
         🕒 Time: just now
         """
+        
             send_telegram_message(chat_id, message)
 
         message = "✅ Bell rang successfully!"
