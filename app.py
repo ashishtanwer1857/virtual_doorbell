@@ -59,7 +59,7 @@ def init_db():
         email TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
         role TEXT NOT NULL,
-        tg_chat_id TEXT
+
     )
     """)
 
@@ -68,6 +68,20 @@ def init_db():
     conn.close()
 
 init_db()
+def ensure_users_schema():
+    conn = sqlite3.connect("doorbell.db")
+    cursor = conn.cursor()
+
+    cursor.execute("PRAGMA table_info(users)")
+    columns = [col[1] for col in cursor.fetchall()]
+
+    if "tg_chat_id" not in columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN tg_chat_id TEXT")
+        conn.commit()
+        print("✅ tg_chat_id column added")
+
+    conn.close()
+
 def create_doorbell_for_owner(owner_id):
     token = secrets.token_urlsafe(16)
     token_hash = hash_token(token)
