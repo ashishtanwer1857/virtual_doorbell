@@ -212,35 +212,30 @@ def is_owner_email(email):
 
 #Now telegram functions starts....
 
-def telegram_start(update: Update, context: CallbackContext):
-    message = update.message.text
+def telegram_start(update, context):
+    text = update.message.text
     chat_id = update.message.chat_id
 
-    parts = message.split()
-
+    parts = text.split()
     if len(parts) != 2:
-        update.message.reply_text(
-            "❌ Invalid start link.\nPlease connect Telegram from dashboard."
-        )
+        update.message.reply_text("❌ Invalid link")
         return
 
     owner_id = parts[1]
 
-    # Save chat_id in database
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
     cursor.execute(
         "UPDATE users SET tg_chat_id=? WHERE id=?",
         (chat_id, owner_id)
     )
-
     conn.commit()
     conn.close()
 
-    update.message.reply_text(
-        "✅ Telegram connected successfully!\nYou will now receive doorbell notifications."
-    )
+    print("✅ TG CONNECTED:", owner_id, chat_id)
+
+    update.message.reply_text("✅ Telegram connected successfully!")
+
 def start_telegram_bot():
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
 
