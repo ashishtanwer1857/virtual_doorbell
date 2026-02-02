@@ -231,7 +231,7 @@ def telegram_start(update: Update, context: CallbackContext):
     cursor = conn.cursor()
 
     cursor.execute(
-        "UPDATE users SET telegram_chat_id=? WHERE id=?",
+        "UPDATE users SET tg_chat_id=? WHERE id=?",
         (chat_id, owner_id)
     )
 
