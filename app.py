@@ -34,7 +34,7 @@ def hash_token(token: str) -> str:
 def init_db():
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
-
+    cursor.execute("DROP TABLE IF EXISTS users")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS doorbell (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -67,7 +67,7 @@ def init_db():
 
     conn.commit()
     conn.close()
-
+    print("database reinitlaized")
 init_db()
 def ensure_users_schema():
     conn = sqlite3.connect(DB_PATH)
