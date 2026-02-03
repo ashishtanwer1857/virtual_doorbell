@@ -5,17 +5,14 @@ import qrcode,hashlib
 import secrets,threading
 import requests
 from werkzeug.security import generate_password_hash,check_password_hash
-from telegram import Update
-from telegram.ext import (
-    Updater,
-    CommandHandler,
-    CallbackContext
-)
+#from telegram import Update
+#from telegram.ext import (    Updater,CommandHandler,CallbackContext)
+
 
 import threading
 
-telegram_started = False
-telegram_lock = threading.Lock()
+#telegram_started = False
+#telegram_lock = threading.Lock()
 
 
 
@@ -27,12 +24,12 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 ring_cooldown=30
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "doorbell.db")
-def run_telegram_once():
-    global telegram_started
-    with telegram_lock:
-        if not telegram_started:
-            telegram_started = True
-            start_telegram_bot()
+#def run_telegram_once():
+#global telegram_started
+ #   with telegram_lock:
+  #      if not telegram_started:
+   #         telegram_started = True
+    #        start_telegram_bot()
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
@@ -218,7 +215,7 @@ def is_owner_email(email):
 
 #Now telegram functions starts....
 
-def telegram_start(update: Update, context: CallbackContext):
+#def telegram_start(update: Update, context: CallbackContext):
     message = update.message.text
     chat_id = update.message.chat_id
 
@@ -247,7 +244,7 @@ def telegram_start(update: Update, context: CallbackContext):
     update.message.reply_text(
         "✅ Telegram connected successfully!\nYou will now receive doorbell notifications."
     )
-def start_telegram_bot():
+#def start_telegram_bot():
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
 
     if not token:
@@ -264,7 +261,7 @@ def start_telegram_bot():
 
 
 
-def send_telegram_message(chat_id, text):
+#def send_telegram_message(chat_id, text):
     token = os.environ.get("TELEGRAM_BOT_TOKEN")
 
     if not token:
@@ -284,7 +281,7 @@ def send_telegram_message(chat_id, text):
     except Exception as e:
         print("❌ Telegram send error:", e)
 
-def get_owner_telegram_chat_id(owner_id):
+#def get_owner_telegram_chat_id(owner_id):
     conn = sqlite3.connect(DB_PATH)
     cursor = conn.cursor()
 
@@ -453,19 +450,19 @@ def ring(token):
             )
 
         save_ring_event(owner_id, visitor_email, visitor_ip)
-        chat_id = get_owner_telegram_chat_id(owner_id)
-        print("📨 TELEGRAM CHAT ID:", chat_id)
+       # chat_id = get_owner_telegram_chat_id(owner_id)
+        #print("📨 TELEGRAM CHAT ID:", chat_id)
 
-        if chat_id:
-            message = f"""
-        🔔 <b>Doorbell Rang</b>
+       # if chat_id:
+       #     message = f"""
+        #🔔 <b>Doorbell Rang</b>
 
-        📧 Visitor: {visitor_email}
-        🌐 IP: {visitor_ip}
-        🕒 Time: just now
-        """
+        #📧 Visitor: {visitor_email}
+        #🌐 IP: {visitor_ip}
+       # 🕒 Time: just now
+       # """
         
-            send_telegram_message(chat_id, message)
+            #send_telegram_message(chat_id, message)
 
         message = "✅ Bell rang successfully!"
 
@@ -511,7 +508,7 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
-print("🤖 Telegram token:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")))
+#print("🤖 Telegram token:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")))
 
 if __name__ == "__main__":
     #threading.Thread(target=run_telegram_once, daemon=True).start()
