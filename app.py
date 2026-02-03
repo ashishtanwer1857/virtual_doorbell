@@ -27,6 +27,12 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 ring_cooldown=30
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "doorbell.db")
+def run_telegram_once():
+    global telegram_started
+    with telegram_lock:
+        if not telegram_started:
+            telegram_started = True
+            start_telegram_bot()
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
@@ -505,9 +511,12 @@ def logout():
     session.clear()
     return redirect(url_for("login"))
 
+print("🤖 Telegram token:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")))
 
 if __name__ == "__main__":
+    threading.Thread(target=run_telegram_once, daemon=True).start()
     app.run()
+
 
 
 
