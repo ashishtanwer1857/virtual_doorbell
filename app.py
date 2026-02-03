@@ -514,7 +514,7 @@ def logout():
 print("🤖 Telegram token:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")))
 
 if __name__ == "__main__":
-    threading.Thread(target=run_telegram_once, daemon=True).start()
+    #threading.Thread(target=run_telegram_once, daemon=True).start()
     app.run()
 
 
