@@ -24,12 +24,6 @@ app.secret_key = os.environ.get("SECRET_KEY", "dev-secret")
 ring_cooldown=30
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.path.join(BASE_DIR, "doorbell.db")
-#def run_telegram_once():
-#global telegram_started
- #   with telegram_lock:
-  #      if not telegram_started:
-   #         telegram_started = True
-    #        start_telegram_bot()
 
 def hash_token(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
@@ -212,87 +206,6 @@ def is_owner_email(email):
 
     return row is not None
 
-
-#Now telegram functions starts....
-
-#def telegram_start(update: Update, context: CallbackContext):
-    message = update.message.text
-    chat_id = update.message.chat_id
-
-    parts = message.split()
-
-    if len(parts) != 2:
-        update.message.reply_text(
-            "❌ Invalid start link.\nPlease connect Telegram from dashboard."
-        )
-        return
-
-    owner_id = parts[1]
-
-    # Save chat_id in database
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "UPDATE users SET tg_chat_id=? WHERE id=?",
-        (chat_id, owner_id)
-    )
-
-    conn.commit()
-    conn.close()
-
-    update.message.reply_text(
-        "✅ Telegram connected successfully!\nYou will now receive doorbell notifications."
-    )
-#def start_telegram_bot():
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-
-    if not token:
-        print("❌ TELEGRAM_BOT_TOKEN not set")
-        return
-
-    updater = Updater(token, use_context=True)
-    dp = updater.dispatcher
-
-    dp.add_handler(CommandHandler("start", telegram_start))
-
-    updater.start_polling()
-    print("🤖 Telegram bot started")
-
-
-
-#def send_telegram_message(chat_id, text):
-    token = os.environ.get("TELEGRAM_BOT_TOKEN")
-
-    if not token:
-        print("❌ TELEGRAM_BOT_TOKEN missing")
-        return
-
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-
-    payload = {
-        "chat_id": chat_id,
-        "text": text,
-        "parse_mode": "HTML"
-    }
-
-    try:
-        requests.post(url, json=payload, timeout=5)
-    except Exception as e:
-        print("❌ Telegram send error:", e)
-
-#def get_owner_telegram_chat_id(owner_id):
-    conn = sqlite3.connect(DB_PATH)
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT tg_chat_id FROM users WHERE id=?",
-        (owner_id,)
-    )
-    row = cursor.fetchone()
-    conn.close()
-
-    return row[0] if row and row[0] else None
 
 
 @app.route("/")
